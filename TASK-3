@@ -1,1 +1,49 @@
+import random
 
+def build_markov_chain(text, order=1):
+    model = {}
+    for i in range(len(text) - order):
+        current_state = text[i:i+order]
+        next_char = text[i+order]
+        if current_state not in model:
+            model[current_state] = {}
+        model[current_state][next_char] = model[current_state].get(next_char, 0) + 1
+    return model
+
+def generate_text(model, length=100, order=1, seed=None):
+    if not model:
+        return ""
+    
+    if seed and seed in model:
+        current_state = seed
+    else:
+        current_state = random.choice(list(model.keys()))
+    
+    result = current_state
+    
+    for _ in range(length - order):
+        if current_state not in model:
+            break
+        next_chars = model[current_state]
+        total = sum(next_chars.values())
+        probabilities = {char: count/total for char, count in next_chars.items()}
+        next_char = random.choices(
+            list(probabilities.keys()),
+            weights=list(probabilities.values())
+        )[0]
+        result += next_char
+        current_state = result[-order:]
+    
+    return result
+
+sample_text = """
+The quick brown fox jumps over the lazy dog. 
+The sun sets slowly behind the mountain, casting a warm glow.
+Simple pleasures in life are often the most meaningful.
+"""
+
+markov_model = build_markov_chain(sample_text, order=2)
+random.seed(42)  
+generated_text = generate_text(markov_model, length=100, order=2)
+print("Generated Text:")
+print(generated_text)
